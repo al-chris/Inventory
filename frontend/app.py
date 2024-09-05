@@ -220,7 +220,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 # Create Item
 with tab1:
     st.subheader("Create New Item")
-    with st.expander("Click to Create a New Item"):
+    with st.expander("Click to Create a New Item :material/add:"):
         item_name = st.text_input("Item Name")
         item_description = st.text_area("Item Description")
         item_quantity = st.number_input("Quantity", min_value=0, step=1)
