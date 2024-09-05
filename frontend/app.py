@@ -18,85 +18,198 @@ if password != os.getenv("PASSWORD"):
     st.warning("Incorrect password")
     st.stop()
 
+
+#########################################################################################################
+# Function to fetch categories
+def fetch_categories():
+    try:
+        response = requests.get(f"{API_URL}/categories/")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error("Failed to fetch categories")
+            return []
+    except Exception as e:
+        st.error(f"Failed to fetch categories: {e}")
+        return []
+
+# Function to fetch logs by category
+def fetch_logs_by_category(category_id):
+    try:
+        response = requests.get(f"{API_URL}/categories/{category_id}/logs/")
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Failed to fetch logs: {e}")
+        return []
+
+def delete_category(category_id):
+    try:
+        response = requests.delete(f"{API_URL}/categories/{category_id}")
+        if response.status_code == 200:
+            st.success("Category deleted successfully")
+        else:
+            st.error("Failed to delete category")
+    except Exception as e:
+        st.error(f"Failed to delete category: {e}")
+
+def fetch_items():
+    try:
+        response = requests.get(f"{API_URL}/items/")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error("Failed to fetch items")
+            return []
+    except Exception as e:
+        st.error(f"Failed to fetch items: {e}")
+        return []
+
+def delete_item(item_id):
+    try:
+        response = requests.delete(f"{API_URL}/items/{item_id}")
+        if response.status_code == 200:
+            st.success("Item deleted successfully")
+        else:
+            st.error("Failed to delete item")
+    except Exception as e:
+        st.error(f"Failed to delete item: {e}")
+
+def fetch_logs_of_deleted_categories():
+    try:
+        response = requests.get(f"{API_URL}/logs/deleted_categories")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error("Failed to fetch logs of deleted categories")
+            return []
+    except Exception as e:
+        st.error(f"Failed to fetch logs of deleted categories: {e}")
+        return []
+#########################################################################################################
+
+
 # Display Categories
 st.header("Categories")
-try:
-    categories = requests.get(f"{API_URL}/categories/").json()
-    category_dict = {category['id']: category['name'] for category in categories}
 
-    if categories:
-        selected_category = st.selectbox("Select Category", options=[
-            name for name in category_dict.values()
-        ])
-        selected_category_id = next((
-            id for id, name in category_dict.items() if name == selected_category),
-            None
-        )
+c_tab1, c_tab2, c_tab3, c_tab4 = st.tabs(["Select Category","Create Category", "Edit Category", "Delete Category"])
 
-        if st.button(f"Show Items in {selected_category}"):
-            if selected_category_id:
-                items = requests.get(f"{API_URL}/categories/{selected_category_id}/items/").json()
-                if items:
-                    st.subheader(f"Items in {selected_category}")
-                    st.table(items)
-
-                    # Convert items to a DataFrame for download
-                    items_df = pd.DataFrame([items])
-                    csv_data = items_df.to_csv(index=False)
-
-                    # Add download button
-                    st.download_button(
-                        label="Download items as CSV",
-                        data=csv_data,
-                        file_name=f"{selected_category}_items.csv",
-                        mime='text/csv'
-                    )
-                else:
-                    st.info(f"No items found in {selected_category}")
-            else:
-                st.error("Selected category ID not found.")
-except requests.exceptions.RequestException as e:
-    st.error(f"Error fetching categories: {e}")
-
-# Create Category
-st.header("Create New Category")
-new_category_name = st.text_input("Category Name")
-if st.button("Create Category"):
+with c_tab1:
     try:
-        response = requests.post(f"{API_URL}/categories/", params={"name": new_category_name})
-        response.raise_for_status()
-        st.success("Category created successfully")
-    except requests.exceptions.RequestException as e:
-        st.error(f"Failed to create category: {e}")
+        categories = requests.get(f"{API_URL}/categories/").json()
+        category_dict = {category['id']: category['name'] for category in categories}
 
-# Edit Category
-st.header("Edit Category Name")
-with st.expander("Click to Edit a category name"):
-    try:
         if categories:
-            category_to_edit = st.selectbox("Select Category to Edit", options=[name for name in category_dict.values()])
-            category_id_to_edit = next((id for id, name in category_dict.items() if name == category_to_edit), None)
-            new_category_name = st.text_input("New Category Name", value=category_to_edit)
+            selected_category = st.selectbox("Select Category", options=[
+                name for name in category_dict.values()
+            ])
+            selected_category_id = next((
+                id for id, name in category_dict.items() if name == selected_category),
+                None
+            )
 
-            if st.button("Update Category Name"):
-                if category_id_to_edit:
-                    try:
-                        response = requests.put(f"{API_URL}/categories/{category_id_to_edit}", params={"name": new_category_name})
-                        response.raise_for_status()
-                        st.success(f"Category name updated to '{new_category_name}' successfully")
-                    except requests.exceptions.RequestException as e:
-                        st.error(f"Failed to update category name: {e}")
+            if st.button(f"Show Items in {selected_category}"):
+                if selected_category_id:
+                    items = requests.get(f"{API_URL}/categories/{selected_category_id}/items/").json()
+                    if items:
+                        st.subheader(f"Items in {selected_category}")
+                        st.table(items)
+
+                        # Convert items to a DataFrame for download
+                        items_df = pd.DataFrame([items])
+                        csv_data = items_df.to_csv(index=False)
+
+                        # Add download button
+                        st.download_button(
+                            label="Download items as CSV",
+                            data=csv_data,
+                            file_name=f"{selected_category}_items.csv",
+                            mime='text/csv'
+                        )
+                    else:
+                        st.info(f"No items found in {selected_category}")
                 else:
                     st.error("Selected category ID not found.")
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching categories: {e}")
+
+# Create Category
+with c_tab2:
+    st.subheader("Create New Category")
+    new_category_name = st.text_input("Category Name")
+    if st.button("Create Category"):
+        try:
+            response = requests.post(f"{API_URL}/categories/", params={"name": new_category_name})
+            response.raise_for_status()
+            st.success("Category created successfully")
+        except requests.exceptions.RequestException as e:
+            st.error(f"Failed to create category: {e}")
+
+# Edit Category
+with c_tab3:
+    st.subheader("Edit Category Name")
+    with st.expander("Click to Edit a category name"):
+        try:
+            if categories:
+                category_to_edit = st.selectbox("Select Category to Edit", options=[name for name in category_dict.values()])
+                category_id_to_edit = next((id for id, name in category_dict.items() if name == category_to_edit), None)
+                new_category_name = st.text_input("New Category Name", value=category_to_edit)
+
+                if st.button("Update Category Name"):
+                    if category_id_to_edit:
+                        try:
+                            response = requests.put(f"{API_URL}/categories/{category_id_to_edit}", params={"name": new_category_name})
+                            response.raise_for_status()
+                            st.success(f"Category name updated to '{new_category_name}' successfully")
+                        except requests.exceptions.RequestException as e:
+                            st.error(f"Failed to update category name: {e}")
+                    else:
+                        st.error("Selected category ID not found.")
+        except requests.exceptions.RequestException as e:
+            st.error(f"Error fetching categories: {e}")
+
+# Section to delete categories
+with c_tab4:
+    st.subheader("Delete")
+    with st.expander("Click to delete categories and items"):
+        st.subheader("Delete Category")
+        categories = fetch_categories()
+
+        if categories:
+            category_options = {category['name']: category['id'] for category in categories}
+            selected_category = st.selectbox("Select a category to delete", list(category_options.keys()))
+            
+            if selected_category:
+                category_id = category_options[selected_category]
+                
+                # Display confirmation input field
+                confirmation_text = st.text_input(f'To confirm, type ":red[delete {selected_category}]"')
+
+                # Check if the confirmation text matches the required format
+                if confirmation_text == f"delete {selected_category}":
+                    # Enable the delete button only when the confirmation text is correct
+                    if st.button("Delete Category"):
+                        delete_category(category_id)
+                else:
+                    st.warning(f'Type "delete {selected_category}" to enable the delete button.')
+        else:
+            st.info("No categories found.")
+
+        st.divider()
+
 
 st.divider()
 #########################################################################################################
 
 st.header("Items")
 
-tab1, tab2, tab3, tab4 = st.tabs(["Create Item", "Edit Item", "Search Items", "List Items"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "Create Item", 
+    "Edit Item", 
+    "Search Items", 
+    "List Items", 
+    "Delete Item"
+])
 
 # Create Item
 with tab1:
@@ -219,107 +332,8 @@ with tab4:
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching items: {e}")
 
-st.divider()
-#########################################################################################################
-
-
-# Function to fetch categories
-def fetch_categories():
-    try:
-        response = requests.get(f"{API_URL}/categories/")
-        if response.status_code == 200:
-            return response.json()
-        else:
-            st.error("Failed to fetch categories")
-            return []
-    except Exception as e:
-        st.error(f"Failed to fetch categories: {e}")
-        return []
-
-# Function to fetch logs by category
-def fetch_logs_by_category(category_id):
-    try:
-        response = requests.get(f"{API_URL}/categories/{category_id}/logs/")
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        st.error(f"Failed to fetch logs: {e}")
-        return []
-
-def delete_category(category_id):
-    try:
-        response = requests.delete(f"{API_URL}/categories/{category_id}")
-        if response.status_code == 200:
-            st.success("Category deleted successfully")
-        else:
-            st.error("Failed to delete category")
-    except Exception as e:
-        st.error(f"Failed to delete category: {e}")
-
-def fetch_items():
-    try:
-        response = requests.get(f"{API_URL}/items/")
-        if response.status_code == 200:
-            return response.json()
-        else:
-            st.error("Failed to fetch items")
-            return []
-    except Exception as e:
-        st.error(f"Failed to fetch items: {e}")
-        return []
-
-def delete_item(item_id):
-    try:
-        response = requests.delete(f"{API_URL}/items/{item_id}")
-        if response.status_code == 200:
-            st.success("Item deleted successfully")
-        else:
-            st.error("Failed to delete item")
-    except Exception as e:
-        st.error(f"Failed to delete item: {e}")
-
-def fetch_logs_of_deleted_categories():
-    try:
-        response = requests.get(f"{API_URL}/logs/deleted_categories")
-        if response.status_code == 200:
-            return response.json()
-        else:
-            st.error("Failed to fetch logs of deleted categories")
-            return []
-    except Exception as e:
-        st.error(f"Failed to fetch logs of deleted categories: {e}")
-        return []
-
-
-# Section to delete categories
-st.header("Delete")
-with st.expander("Click to delete categories and items"):
-    st.subheader("Delete Category")
-    categories = fetch_categories()
-
-    if categories:
-        category_options = {category['name']: category['id'] for category in categories}
-        selected_category = st.selectbox("Select a category to delete", list(category_options.keys()))
-        
-        if selected_category:
-            category_id = category_options[selected_category]
-            
-            # Display confirmation input field
-            confirmation_text = st.text_input(f'To confirm, type ":red[delete {selected_category}]"')
-
-            # Check if the confirmation text matches the required format
-            if confirmation_text == f"delete {selected_category}":
-                # Enable the delete button only when the confirmation text is correct
-                if st.button("Delete Category"):
-                    delete_category(category_id)
-            else:
-                st.warning(f'Type "delete {selected_category}" to enable the delete button.')
-    else:
-        st.info("No categories found.")
-
-    st.divider()
-
-    # Section to delete items
+# Section to delete items
+with tab5:
     st.subheader("Delete Item")
     items = fetch_items()
 
@@ -337,6 +351,8 @@ with st.expander("Click to delete categories and items"):
 
 st.divider()
 #########################################################################################################
+
+
 
 
 # View Logs Section
