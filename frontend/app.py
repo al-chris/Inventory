@@ -150,6 +150,7 @@ with c_tab3:
     st.subheader("Edit Category Name")
     with st.expander("Click to Edit a category name"):
         try:
+            categories = fetch_categories()
             if categories:
                 category_to_edit = st.selectbox("Select Category to Edit", options=[name for name in category_dict.values()])
                 category_id_to_edit = next((id for id, name in category_dict.items() if name == category_to_edit), None)
