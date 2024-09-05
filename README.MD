@@ -95,7 +95,7 @@ inventory_management_system/
 
 - **Category Management**: 
     - Create, view, and update categories, with each category displaying its creation date. 
-    - Categories can also be deleted when no longer needed.
+    - ~~Categories can also be deleted when no longer needed.~~
 
 - **Item Management**: 
     - Create, view, edit, delete, and search for items by name or description. 
