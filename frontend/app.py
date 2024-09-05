@@ -94,122 +94,130 @@ with st.expander("Click to Edit a category name"):
 st.divider()
 #########################################################################################################
 
-# Display Items
 st.header("Items")
-try:
-    items = requests.get(f"{API_URL}/items/").json()
-    with st.expander("Click to Show All Items"):
-        # st.write("This is the content inside the expander.")
-        st.write(items)
-except requests.exceptions.RequestException as e:
-    st.error(f"Error fetching items: {e}")
+
+tab1, tab2, tab3, tab4 = st.tabs(["Create Item", "Edit Item", "Search Items", "List Items"])
 
 # Create Item
-st.header("Create New Item")
-with st.expander("Click to Create a New Item"):
-    item_name = st.text_input("Item Name")
-    item_description = st.text_area("Item Description")
-    item_quantity = st.number_input("Quantity", min_value=0, step=1)
+with tab1:
+    st.subheader("Create New Item")
+    with st.expander("Click to Create a New Item"):
+        item_name = st.text_input("Item Name")
+        item_description = st.text_area("Item Description")
+        item_quantity = st.number_input("Quantity", min_value=0, step=1)
 
-    # Check if there are categories available
-    if categories:
-        category_name = st.selectbox("Category", [category['name'] for category in categories])
-        category_id = next((id for id, name in category_dict.items() if name == category_name), None)
-    else:
-        category_id = None
-
-    # Button to create a new item
-    if st.button("Create Item"):
-        if category_id is None:
-            st.error("Please create a category first.")
+        # Check if there are categories available
+        if categories:
+            category_name = st.selectbox("Category", [category['name'] for category in categories])
+            category_id = next((id for id, name in category_dict.items() if name == category_name), None)
         else:
-            try:
-                response = requests.post(
-                    f"{API_URL}/items/",
-                    params={
-                        "name": item_name,
-                        "description": item_description,
-                        "category_id": category_id,
-                        "quantity": item_quantity
-                    }
-                )
-                response.raise_for_status()
-                st.success("Item created successfully")
-            except requests.exceptions.RequestException as e:
-                st.error(f"Failed to create item: {e}")
+            category_id = None
+
+        # Button to create a new item
+        if st.button("Create Item"):
+            if category_id is None:
+                st.error("Please create a category first.")
+            else:
+                try:
+                    response = requests.post(
+                        f"{API_URL}/items/",
+                        params={
+                            "name": item_name,
+                            "description": item_description,
+                            "category_id": category_id,
+                            "quantity": item_quantity
+                        }
+                    )
+                    response.raise_for_status()
+                    st.success("Item created successfully")
+                except requests.exceptions.RequestException as e:
+                    st.error(f"Failed to create item: {e}")
 
 # Edit Item
-st.header("Edit Item")
-with st.expander("Click to Edit an Item"):
-    item_id_to_edit = st.number_input("Enter Item ID to Edit", min_value=1, step=1)
-    if item_id_to_edit:
-        try:
-            item = requests.get(f"{API_URL}/items/{item_id_to_edit}").json()
-            if all(key in item for key in ['name', 'description', 'quantity', 'category_id']):
-                item_name_edit = st.text_input("Edit Item Name", value=item['name'])
-                item_description_edit = st.text_area("Edit Item Description", value=item['description'])
-                item_quantity_edit = st.number_input("Edit Quantity", value=item['quantity'], min_value=0, step=1)
-                item_category_name_edit = st.selectbox(
-                    "Edit Category",
-                    [category['name'] for category in categories],
-                    index=next((i for i, cat in enumerate(categories) if cat['id'] == item['category_id']), 0)
-                )
-                category_id_edit = next((id for id, name in category_dict.items() if name == item_category_name_edit), None)
+with tab2:
+    st.subheader("Edit Item")
+    with st.expander("Click to Edit an Item"):
+        item_id_to_edit = st.number_input("Enter Item ID to Edit", min_value=1, step=1)
+        if item_id_to_edit:
+            try:
+                item = requests.get(f"{API_URL}/items/{item_id_to_edit}").json()
+                if all(key in item for key in ['name', 'description', 'quantity', 'category_id']):
+                    item_name_edit = st.text_input("Edit Item Name", value=item['name'])
+                    item_description_edit = st.text_area("Edit Item Description", value=item['description'])
+                    item_quantity_edit = st.number_input("Edit Quantity", value=item['quantity'], min_value=0, step=1)
+                    item_category_name_edit = st.selectbox(
+                        "Edit Category",
+                        [category['name'] for category in categories],
+                        index=next((i for i, cat in enumerate(categories) if cat['id'] == item['category_id']), 0)
+                    )
+                    category_id_edit = next((id for id, name in category_dict.items() if name == item_category_name_edit), None)
 
-                if st.button("Update Item"):
-                    if category_id_edit is not None:
-                        try:
-                            response = requests.put(
-                                f"{API_URL}/items/{item_id_to_edit}",
-                                params={
-                                    "name": item_name_edit,
-                                    "description": item_description_edit,
-                                    "quantity": item_quantity_edit,
-                                    "category_id": category_id_edit
-                                }
-                            )
-                            response.raise_for_status()
-                            st.success("Item updated successfully")
-                        except requests.exceptions.RequestException as e:
-                            st.error(f"Failed to update item: {e}")
-                    else:
-                        st.error("Selected category ID not found.")
-            else:
-                st.error("Item response missing expected fields.")
-        except requests.exceptions.RequestException as e:
-            st.error(f"Error fetching item details: {e}")
+                    if st.button("Update Item"):
+                        if category_id_edit is not None:
+                            try:
+                                response = requests.put(
+                                    f"{API_URL}/items/{item_id_to_edit}",
+                                    params={
+                                        "name": item_name_edit,
+                                        "description": item_description_edit,
+                                        "quantity": item_quantity_edit,
+                                        "category_id": category_id_edit
+                                    }
+                                )
+                                response.raise_for_status()
+                                st.success("Item updated successfully")
+                            except requests.exceptions.RequestException as e:
+                                st.error(f"Failed to update item: {e}")
+                        else:
+                            st.error("Selected category ID not found.")
+                else:
+                    st.error("Item response missing expected fields.")
+            except requests.exceptions.RequestException as e:
+                st.error(f"Error fetching item details: {e}")
 
 # Search Items
-st.header("Search Items")
-search_query = st.text_input("Enter search query")
-if st.button("Search"):
+with tab3:
+    st.subheader("Search Items")
+    search_query = st.text_input("Enter search query")
+    if st.button("Search"):
+        try:
+            response = requests.get(f"{API_URL}/search/", params={"query": search_query})
+            response.raise_for_status()
+            search_results = response.json()
+            if search_results:
+                st.write("Search Results:")
+                st.table(search_results)
+
+                # Convert search results to a DataFrame for download
+                search_results_df = pd.DataFrame(search_results)
+                csv_data = search_results_df.to_csv(index=False)
+
+                # Add download button
+                st.download_button(
+                    label="Download search results as CSV",
+                    data=csv_data,
+                    file_name="search_results.csv",
+                    mime='text/csv'
+                )
+            else:
+                st.info("No items found.")
+        except requests.exceptions.RequestException as e:
+            st.error(f"Error searching for items: {e}")
+        except requests.exceptions.HTTPError as http_err:
+            st.error(f"HTTP error occurred: {http_err}")
+        except Exception as err:
+            st.error(f"An error occurred: {err}")
+
+# Display Items
+with tab4:
+    st.subheader("List Items")
     try:
-        response = requests.get(f"{API_URL}/search/", params={"query": search_query})
-        response.raise_for_status()
-        search_results = response.json()
-        if search_results:
-            st.write("Search Results:")
-            st.table(search_results)
-
-            # Convert search results to a DataFrame for download
-            search_results_df = pd.DataFrame(search_results)
-            csv_data = search_results_df.to_csv(index=False)
-
-            # Add download button
-            st.download_button(
-                label="Download search results as CSV",
-                data=csv_data,
-                file_name="search_results.csv",
-                mime='text/csv'
-            )
-        else:
-            st.info("No items found.")
+        items = requests.get(f"{API_URL}/items/").json()
+        with st.expander("Click to Show All Items"):
+            # st.write("This is the content inside the expander.")
+            st.write(items)
     except requests.exceptions.RequestException as e:
-        st.error(f"Error searching for items: {e}")
-    except requests.exceptions.HTTPError as http_err:
-        st.error(f"HTTP error occurred: {http_err}")
-    except Exception as err:
-        st.error(f"An error occurred: {err}")
+        st.error(f"Error fetching items: {e}")
 
 st.divider()
 #########################################################################################################
