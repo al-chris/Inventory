@@ -12,6 +12,10 @@ st.set_page_config(page_title="InvenSuite", page_icon="📦")
 
 st.title("Inventory Management System")
 
+# Initialize session state for sidebar closing control
+if 'sidebar_closed' not in st.session_state:
+    st.session_state.sidebar_closed = False
+
 # User Authentication (Simple Password Protection)
 password = st.sidebar.text_input("Enter Password", type="password")
 if password != os.getenv("PASSWORD"):
@@ -92,7 +96,12 @@ def fetch_logs_of_deleted_categories():
 # Display Categories
 st.header("Categories")
 
-c_tab1, c_tab2, c_tab3, c_tab4 = st.tabs(["Select Category","Create Category", "Edit Category", "Delete Category"])
+c_tab1, c_tab2, c_tab3, c_tab4 = st.tabs([
+    "Select Category",
+    "Create Category", 
+    "Edit Category",
+    "Delete Category"
+])
 
 with c_tab1:
     try:
@@ -358,9 +367,9 @@ st.divider()
 
 # View Logs Section
 st.header("View Logs")
-with st.expander("Click to view logs"):
+l_tab1, l_tab2 = st.tabs(["View Logs by Category", "View Logs of Deleted Categories"])
 
-    st.subheader("View Logs by Category")
+with l_tab1:
 
     # Fetch categories and display a dropdown for selection
     categories = fetch_categories()
@@ -414,8 +423,8 @@ with st.expander("Click to view logs"):
 
     st.divider()
 
+with l_tab2:
     # Section to view logs of deleted categories
-    st.subheader("View Logs of Deleted Categories")
 
     if st.button("View Deleted Category Logs"):
         logs = fetch_logs_of_deleted_categories()
