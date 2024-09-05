@@ -8,7 +8,7 @@ load_dotenv()
 
 API_URL = os.getenv("API_URL")
 
-st.set_page_config(page_title="Inventory Management System", page_icon="📦")
+st.set_page_config(page_title="InvenSuite", page_icon="📦")
 
 st.title("Inventory Management System")
 
