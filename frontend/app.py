@@ -96,7 +96,7 @@ c_tab1, c_tab2, c_tab3, c_tab4 = st.tabs(["Select Category","Create Category", "
 
 with c_tab1:
     try:
-        categories = requests.get(f"{API_URL}/categories/").json()
+        categories = fetch_categories()
         category_dict = {category['id']: category['name'] for category in categories}
 
         if categories:
