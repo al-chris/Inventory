@@ -25,8 +25,13 @@ try:
     category_dict = {category['id']: category['name'] for category in categories}
 
     if categories:
-        selected_category = st.selectbox("Select Category", options=[name for name in category_dict.values()])
-        selected_category_id = next((id for id, name in category_dict.items() if name == selected_category), None)
+        selected_category = st.selectbox("Select Category", options=[
+            name for name in category_dict.values()
+        ])
+        selected_category_id = next((
+            id for id, name in category_dict.items() if name == selected_category),
+            None
+        )
 
         if st.button(f"Show Items in {selected_category}"):
             if selected_category_id:
@@ -36,7 +41,7 @@ try:
                     st.table(items)
 
                     # Convert items to a DataFrame for download
-                    items_df = pd.DataFrame(items)
+                    items_df = pd.DataFrame([items])
                     csv_data = items_df.to_csv(index=False)
 
                     # Add download button
@@ -85,6 +90,9 @@ with st.expander("Click to Edit a category name"):
                     st.error("Selected category ID not found.")
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching categories: {e}")
+
+st.divider()
+#########################################################################################################
 
 # Display Items
 st.header("Items")
@@ -203,15 +211,20 @@ if st.button("Search"):
     except Exception as err:
         st.error(f"An error occurred: {err}")
 
+st.divider()
+#########################################################################################################
 
 
 # Function to fetch categories
 def fetch_categories():
     try:
         response = requests.get(f"{API_URL}/categories/")
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error("Failed to fetch categories")
+            return []
+    except Exception as e:
         st.error(f"Failed to fetch categories: {e}")
         return []
 
@@ -225,55 +238,175 @@ def fetch_logs_by_category(category_id):
         st.error(f"Failed to fetch logs: {e}")
         return []
 
-# View Logs Section
-st.header("View Logs by Category")
+def delete_category(category_id):
+    try:
+        response = requests.delete(f"{API_URL}/categories/{category_id}")
+        if response.status_code == 200:
+            st.success("Category deleted successfully")
+        else:
+            st.error("Failed to delete category")
+    except Exception as e:
+        st.error(f"Failed to delete category: {e}")
 
-# Fetch categories and display a dropdown for selection
-categories = fetch_categories()
+def fetch_items():
+    try:
+        response = requests.get(f"{API_URL}/items/")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error("Failed to fetch items")
+            return []
+    except Exception as e:
+        st.error(f"Failed to fetch items: {e}")
+        return []
 
-# Debugging: Check if categories were fetched correctly
-# st.write("Fetched Categories:", categories)
+def delete_item(item_id):
+    try:
+        response = requests.delete(f"{API_URL}/items/{item_id}")
+        if response.status_code == 200:
+            st.success("Item deleted successfully")
+        else:
+            st.error("Failed to delete item")
+    except Exception as e:
+        st.error(f"Failed to delete item: {e}")
 
-if categories:
-    # Creating a dictionary to map category names to their IDs
-    category_options = {category['name']: category['id'] for category in categories}
-    
-    # Debugging: Display the category options available
-    # st.write("Category Options:", category_options)
+def fetch_logs_of_deleted_categories():
+    try:
+        response = requests.get(f"{API_URL}/logs/deleted_categories")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error("Failed to fetch logs of deleted categories")
+            return []
+    except Exception as e:
+        st.error(f"Failed to fetch logs of deleted categories: {e}")
+        return []
 
-    # Dropdown to select a category
-    selected_category = st.selectbox("Select a category", list(category_options.keys()))
 
-    if selected_category:
-        # Get the selected category's ID
-        category_id = category_options[selected_category]
+# Section to delete categories
+st.header("Delete")
+with st.expander("Click to delete categories and items"):
+    st.subheader("Delete Category")
+    categories = fetch_categories()
 
-        # Debugging: Display the selected category and its ID
-        # st.write(f"Selected Category: {selected_category} (ID: {category_id})")
+    if categories:
+        category_options = {category['name']: category['id'] for category in categories}
+        selected_category = st.selectbox("Select a category to delete", list(category_options.keys()))
+        
+        if selected_category:
+            category_id = category_options[selected_category]
+            
+            # Display confirmation input field
+            confirmation_text = st.text_input(f'To confirm, type ":red[delete {selected_category}]"')
 
-        # Button to view logs for the selected category
-        if st.button("View Logs"):
-            # Fetch logs for the selected category
-            logs = fetch_logs_by_category(category_id)
-
-            # Debugging: Display the fetched logs
-            # st.write("Fetched Logs:", logs)
-
-            if logs:
-                # Convert logs to DataFrame for display and download
-                logs_df = pd.DataFrame(logs)
-                st.write("Logs for selected category:")
-                st.table(logs_df)
-
-                # Button to download the logs as a CSV file
-                csv_data = logs_df.to_csv(index=False)
-                st.download_button(
-                    label="Download logs as CSV",
-                    data=csv_data,
-                    file_name=f"{selected_category}_logs.csv",
-                    mime='text/csv'
-                )
+            # Check if the confirmation text matches the required format
+            if confirmation_text == f"delete {selected_category}":
+                # Enable the delete button only when the confirmation text is correct
+                if st.button("Delete Category"):
+                    delete_category(category_id)
             else:
-                st.info("No logs found for this category.")
-else:
-    st.info("No categories found.")
+                st.warning(f'Type "delete {selected_category}" to enable the delete button.')
+    else:
+        st.info("No categories found.")
+
+    st.divider()
+
+    # Section to delete items
+    st.subheader("Delete Item")
+    items = fetch_items()
+
+    if items:
+        item_options = {item['name']: item['id'] for item in items}
+        selected_item = st.selectbox("Select an item to delete", list(item_options.keys()))
+        
+        if selected_item:
+            item_id = item_options[selected_item]
+            
+            if st.button("Delete Item"):
+                delete_item(item_id)
+    else:
+        st.info("No items found.")
+
+st.divider()
+#########################################################################################################
+
+
+# View Logs Section
+st.header("View Logs")
+with st.expander("Click to view logs"):
+
+    st.subheader("View Logs by Category")
+
+    # Fetch categories and display a dropdown for selection
+    categories = fetch_categories()
+
+    # Debugging: Check if categories were fetched correctly
+    # st.write("Fetched Categories:", categories)
+
+    if categories:
+        # Creating a dictionary to map category names to their IDs
+        category_options = {category['name']: category['id'] for category in categories}
+        
+        # Debugging: Display the category options available
+        # st.write("Category Options:", category_options)
+
+        # Dropdown to select a category
+        selected_category = st.selectbox("Select a category", list(category_options.keys()))
+
+        if selected_category:
+            # Get the selected category's ID
+            category_id = category_options[selected_category]
+
+            # Debugging: Display the selected category and its ID
+            # st.write(f"Selected Category: {selected_category} (ID: {category_id})")
+
+            # Button to view logs for the selected category
+            if st.button("View Logs"):
+                # Fetch logs for the selected category
+                logs = fetch_logs_by_category(category_id)
+
+                # Debugging: Display the fetched logs
+                # st.write("Fetched Logs:", logs)
+
+                if logs:
+                    # Convert logs to DataFrame for display and download
+                    logs_df = pd.DataFrame(logs)
+                    st.write("Logs for selected category:")
+                    st.table(logs_df)
+
+                    # Button to download the logs as a CSV file
+                    csv_data = logs_df.to_csv(index=False)
+                    st.download_button(
+                        label="Download logs as CSV",
+                        data=csv_data,
+                        file_name=f"{selected_category}_logs.csv",
+                        mime='text/csv'
+                    )
+                else:
+                    st.info("No logs found for this category.")
+    else:
+        st.info("No categories found.")
+
+    st.divider()
+
+    # Section to view logs of deleted categories
+    st.subheader("View Logs of Deleted Categories")
+
+    if st.button("View Deleted Category Logs"):
+        logs = fetch_logs_of_deleted_categories()
+        
+        if logs:
+            logs_df = pd.DataFrame(logs)
+            st.write("Logs of deleted categories:")
+            st.table(logs_df)
+            
+            # Allow logs to be downloaded as CSV
+            csv_data = logs_df.to_csv(index=False)
+            st.download_button(
+                label="Download logs as CSV",
+                data=csv_data,
+                file_name="deleted_category_logs.csv",
+                mime='text/csv'
+            )
+        else:
+            st.info("No logs found for deleted categories.")

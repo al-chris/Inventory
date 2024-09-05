@@ -82,6 +82,29 @@ def update_category(category_id: int, name: str, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=400, detail="Error updating category")
 
+# DELETE a category
+@app.delete("/categories/{category_id}")
+def delete_category(category_id: int, db: Session = Depends(get_db)):
+    db_category = db.query(Category).filter(Category.id == category_id).first()
+    print("attempting to delete category")
+    if db_category is None:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    # Log the category deletion
+    msg = f"Deleted Category: {db_category.name}"
+    create_log(
+        action="delete_category",
+        category_id=category_id,
+        description=msg,
+        db=db
+    )
+    
+    # Delete the category
+    db.delete(db_category)
+    db.commit()
+    
+    return {"message": "Category deleted"}
+
 @app.post("/items/")
 def create_item(name: str, description: str, category_id: int, quantity: int, db: Session = Depends(get_db)):
     try:
@@ -91,7 +114,7 @@ def create_item(name: str, description: str, category_id: int, quantity: int, db
         db.refresh(db_item)
 
         # Log the item creation
-        msg = f"Created Item: {name}"
+        msg = f"Created Item: {name}, Quantity: {quantity}"
         create_log(
             action="create_item", 
             item_id=db_item.id, 
@@ -167,6 +190,29 @@ def update_item(
 
     return item
 
+# DELETE an item
+@app.delete("/items/{item_id}")
+def delete_item(item_id: int, db: Session = Depends(get_db)):
+    db_item = db.query(Item).filter(Item.id == item_id).first()
+    category_id = db_item.category_id
+    if db_item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Log the item deletion
+    msg = f"Deleted Item: {db_item.name}"
+    create_log(
+        action="delete_item",
+        item_id=item_id,
+        category_id=category_id,
+        description=msg,
+        db=db
+    )
+    
+    # Delete the item
+    db.delete(db_item)
+    db.commit()
+    
+    return {"message": "Item deleted"}
 
 @app.get("/items/{item_id}")
 def read_item(item_id: int, db: Session = Depends(get_db)):
@@ -218,3 +264,12 @@ def get_logs_by_category(category_id: int, db: Session = Depends(get_db)):
         return logs
     except SQLAlchemyError:
         raise HTTPException(status_code=400, detail="Error fetching logs for the category")
+
+# Fetch logs, including those of deleted categories
+@app.get("/logs/deleted_categories")
+def read_logs_of_deleted_categories(db: Session = Depends(get_db)):
+    try:
+        logs_of_deleted_categories = db.query(Log).filter(Log.action == "delete_category").all()
+        return logs_of_deleted_categories
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch logs of deleted categories")
