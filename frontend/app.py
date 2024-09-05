@@ -8,13 +8,9 @@ load_dotenv()
 
 API_URL = os.getenv("API_URL")
 
-st.set_page_config(page_title="InvenSuite", page_icon="📦")
+st.set_page_config(page_title="InvenSuite", page_icon=":material/inventory:")
 
 st.title("Inventory Management System")
-
-# Initialize session state for sidebar closing control
-if 'sidebar_closed' not in st.session_state:
-    st.session_state.sidebar_closed = False
 
 # User Authentication (Simple Password Protection)
 password = st.sidebar.text_input("Enter Password", type="password")
@@ -97,10 +93,10 @@ def fetch_logs_of_deleted_categories():
 st.header("Categories")
 
 c_tab1, c_tab2, c_tab3, c_tab4 = st.tabs([
-    "Select Category",
-    "Create Category", 
-    "Edit Category",
-    "Delete Category"
+    "Select Category :material/list:",
+    "Create Category :material/add:", 
+    "Edit Category :material/create:",
+    "Delete Category :material/delete:"
 ])
 
 with c_tab1:
@@ -130,7 +126,7 @@ with c_tab1:
 
                         # Add download button
                         st.download_button(
-                            label="Download items as CSV",
+                            label="Download items as CSV :material/download:",
                             data=csv_data,
                             file_name=f"{selected_category}_items.csv",
                             mime='text/csv'
@@ -214,11 +210,11 @@ st.divider()
 st.header("Items")
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "Create Item", 
-    "Edit Item", 
-    "Search Items", 
-    "List Items", 
-    "Delete Item"
+    "Create Item :material/add:", 
+    "Edit Item :material/create:", 
+    "Search Items :material/search:", 
+    "List Items :material/list:", 
+    "Delete Item :material/delete:"
 ])
 
 # Create Item
@@ -237,7 +233,7 @@ with tab1:
             category_id = None
 
         # Button to create a new item
-        if st.button("Create Item"):
+        if st.button("Create Item :material/add:"):
             if category_id is None:
                 st.error("Please create a category first.")
             else:
@@ -275,7 +271,7 @@ with tab2:
                     )
                     category_id_edit = next((id for id, name in category_dict.items() if name == item_category_name_edit), None)
 
-                    if st.button("Update Item"):
+                    if st.button("Update Item :material/create:"):
                         if category_id_edit is not None:
                             try:
                                 response = requests.put(
@@ -411,7 +407,7 @@ with l_tab1:
                     # Button to download the logs as a CSV file
                     csv_data = logs_df.to_csv(index=False)
                     st.download_button(
-                        label="Download logs as CSV",
+                        label="Download logs as CSV :material/download:",
                         data=csv_data,
                         file_name=f"{selected_category}_logs.csv",
                         mime='text/csv'
@@ -421,7 +417,6 @@ with l_tab1:
     else:
         st.info("No categories found.")
 
-    st.divider()
 
 with l_tab2:
     # Section to view logs of deleted categories
@@ -437,10 +432,12 @@ with l_tab2:
             # Allow logs to be downloaded as CSV
             csv_data = logs_df.to_csv(index=False)
             st.download_button(
-                label="Download logs as CSV",
+                label="Download logs as CSV :material/download:",
                 data=csv_data,
                 file_name="deleted_category_logs.csv",
                 mime='text/csv'
             )
         else:
             st.info("No logs found for deleted categories.")
+
+st.divider()
