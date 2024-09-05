@@ -21,6 +21,8 @@ inventory_management_system/
 │
 ├── inventory.db                # SQLite database file (auto-generated)
 │
+├── .env                        # ENV file to store sensitive information (e.g., PASSWORD)
+│
 ├── .gitignore                  # Git ignore file to ignore unnecessary files (e.g., inventory.db, __pycache__)
 │
 └── README.md                   # Project documentation
@@ -117,5 +119,5 @@ inventory_management_system/
 
 ## Notes
 
-- The project uses a simple password authentication for the Streamlit app. Update the password in `app.py` as required.
+- The project uses a simple password authentication for the Streamlit app. Update the password in `.env` as required.
 - Make sure to start the FastAPI server before running the Streamlit app to ensure the frontend can communicate with the backend.
