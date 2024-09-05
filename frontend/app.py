@@ -146,6 +146,7 @@ with c_tab2:
         try:
             response = requests.post(f"{API_URL}/categories/", params={"name": new_category_name})
             response.raise_for_status()
+            st.rerun(scope="app")
             st.success("Category created successfully")
         except requests.exceptions.RequestException as e:
             st.error(f"Failed to create category: {e}")
@@ -196,6 +197,7 @@ with c_tab4:
                     # Enable the delete button only when the confirmation text is correct
                     if st.button("Delete Category"):
                         delete_category(category_id)
+                        st.rerun(scope="app")
                 else:
                     st.warning(f'Type "delete {selected_category}" to enable the delete button.')
         else:
@@ -223,7 +225,7 @@ with tab1:
     with st.expander("Click to Create a New Item :material/add:"):
         item_name = st.text_input("Item Name")
         item_description = st.text_area("Item Description")
-        item_quantity = st.number_input("Quantity", min_value=0, step=1)
+        item_quantity = st.number_input("Quantity", min_value=1, step=1)
 
         # Check if there are categories available
         if categories:
@@ -263,7 +265,7 @@ with tab2:
                 if all(key in item for key in ['name', 'description', 'quantity', 'category_id']):
                     item_name_edit = st.text_input("Edit Item Name", value=item['name'])
                     item_description_edit = st.text_area("Edit Item Description", value=item['description'])
-                    item_quantity_edit = st.number_input("Edit Quantity", value=item['quantity'], min_value=0, step=1)
+                    item_quantity_edit = st.number_input("Edit Quantity", value=item['quantity'], min_value=1, step=1)
                     item_category_name_edit = st.selectbox(
                         "Edit Category",
                         [category['name'] for category in categories],
