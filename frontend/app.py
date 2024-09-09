@@ -251,6 +251,7 @@ with tab1:
                     )
                     response.raise_for_status()
                     st.success("Item created successfully")
+                    st.rerun(scope="app")
                 except requests.exceptions.RequestException as e:
                     st.error(f"Failed to create item: {e}")
 
