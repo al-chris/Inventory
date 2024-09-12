@@ -223,37 +223,38 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 with tab1:
     st.subheader("Create New Item")
     with st.expander("Click to Create a New Item :material/add:"):
-        item_name = st.text_input("Item Name")
-        item_description = st.text_area("Item Description")
-        item_quantity = st.number_input("Quantity", min_value=1, step=1)
+        with st.form(" ", clear_on_submit=True, border=False):
+            item_name = st.text_input("Item Name")
+            item_description = st.text_area("Item Description")
+            item_quantity = st.number_input("Quantity", min_value=1, step=1)
 
-        # Check if there are categories available
-        if categories:
-            category_name = st.selectbox("Category", [category['name'] for category in categories])
-            category_id = next((id for id, name in category_dict.items() if name == category_name), None)
-        else:
-            category_id = None
-
-        # Button to create a new item
-        if st.button("Create Item :material/add:"):
-            if category_id is None:
-                st.error("Please create a category first.")
+            # Check if there are categories available
+            if categories:
+                category_name = st.selectbox("Category", [category['name'] for category in categories])
+                category_id = next((id for id, name in category_dict.items() if name == category_name), None)
             else:
-                try:
-                    response = requests.post(
-                        f"{API_URL}/items/",
-                        params={
-                            "name": item_name,
-                            "description": item_description,
-                            "category_id": category_id,
-                            "quantity": item_quantity
-                        }
-                    )
-                    response.raise_for_status()
-                    st.success("Item created successfully")
-                    st.rerun(scope="app")
-                except requests.exceptions.RequestException as e:
-                    st.error(f"Failed to create item: {e}")
+                category_id = None
+
+            # Button to create a new item
+            if submit_button := st.form_submit_button("Create Item :material/add:"):
+                if category_id is None:
+                    st.error("Please create a category first.")
+                else:
+                    try:
+                        response = requests.post(
+                            f"{API_URL}/items/",
+                            params={
+                                "name": item_name,
+                                "description": item_description,
+                                "category_id": category_id,
+                                "quantity": item_quantity
+                            }
+                        )
+                        response.raise_for_status()
+                        st.success("Item created successfully")
+                        st.rerun(scope="app")
+                    except requests.exceptions.RequestException as e:
+                        st.error(f"Failed to create item: {e}")
 
 # Edit Item
 with tab2:
