@@ -140,20 +140,21 @@ with c_tab1:
 
 # Create Category
 with c_tab2:
-    st.subheader("Create New Category")
-    new_category_name = st.text_input("Category Name")
-    if st.button("Create Category"):
-        try:
-            response = requests.post(f"{API_URL}/categories/", params={"name": new_category_name})
-            response.raise_for_status()
-            st.rerun(scope="app")
-            st.success("Category created successfully")
-        except requests.exceptions.RequestException as e:
-            st.error(f"Failed to create category: {e}")
+    with st.form(clear_on_submit=True, border=False, key="create_category_form"):
+        st.subheader("Create New Category")
+        new_category_name = st.text_input("Category Name")
+        if st.form_submit_button("Create Category"):
+            try:
+                response = requests.post(f"{API_URL}/categories/", params={"name": new_category_name})
+                response.raise_for_status()
+                st.rerun(scope="app")
+                st.success("Category created successfully")
+            except requests.exceptions.RequestException as e:
+                st.error(f"Failed to create category: {e}")
 
 # Edit Category
 with c_tab3:
-    st.subheader("Edit Category Name")
+    st.subheader("Edit Category")
     categories = fetch_categories()
     with st.expander("Click to Edit a category name"):
         try:            
@@ -168,6 +169,7 @@ with c_tab3:
                             response = requests.put(f"{API_URL}/categories/{category_id_to_edit}", params={"name": new_category_name})
                             response.raise_for_status()
                             st.success(f"Category name updated to '{new_category_name}' successfully")
+                            st.rerun(scope="app")
                         except requests.exceptions.RequestException as e:
                             st.error(f"Failed to update category name: {e}")
                     else:
@@ -223,7 +225,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 with tab1:
     st.subheader("Create New Item")
     with st.expander("Click to Create a New Item :material/add:"):
-        with st.form(" ", clear_on_submit=True, border=False):
+        with st.form(clear_on_submit=True, border=False, key="create_item_form"):
             item_name = st.text_input("Item Name")
             item_description = st.text_area("Item Description")
             item_quantity = st.number_input("Quantity", min_value=1, step=1)
@@ -289,6 +291,7 @@ with tab2:
                                 )
                                 response.raise_for_status()
                                 st.success("Item updated successfully")
+                                st.rerun(scope="app")
                             except requests.exceptions.RequestException as e:
                                 st.error(f"Failed to update item: {e}")
                         else:
@@ -356,6 +359,7 @@ with tab5:
             
             if st.button("Delete Item"):
                 delete_item(item_id)
+                st.rerun(scope="app")
     else:
         st.info("No items found.")
 
