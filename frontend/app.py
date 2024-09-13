@@ -144,6 +144,8 @@ with c_tab2:
         st.subheader("Create New Category")
         new_category_name = st.text_input("Category Name")
         if st.form_submit_button("Create Category"):
+            if not new_category_name:
+                st.warning("Category name cannot be empty")
             try:
                 response = requests.post(f"{API_URL}/categories/", params={"name": new_category_name})
                 response.raise_for_status()
@@ -164,6 +166,8 @@ with c_tab3:
                 new_category_name = st.text_input("New Category Name", value=category_to_edit)
 
                 if st.button("Update Category Name"):
+                    if not new_category_name:
+                        st.error("Category name cannot be empty.")
                     if category_id_to_edit:
                         try:
                             response = requests.put(f"{API_URL}/categories/{category_id_to_edit}", params={"name": new_category_name})
@@ -241,6 +245,8 @@ with tab1:
             if submit_button := st.form_submit_button("Create Item :material/add:"):
                 if category_id is None:
                     st.error("Please create a category first.")
+                elif not item_name:
+                    st.error("Item name cannot be empty")
                 else:
                     try:
                         response = requests.post(
@@ -278,7 +284,11 @@ with tab2:
                     category_id_edit = next((id for id, name in category_dict.items() if name == item_category_name_edit), None)
 
                     if st.button("Update Item :material/create:"):
-                        if category_id_edit is not None:
+                        if category_id_edit is None:
+                            st.error("Select a valid category")
+                        elif not item_name_edit:
+                            st.error("Item name cannot be empty")
+                        else:
                             try:
                                 response = requests.put(
                                     f"{API_URL}/items/{item_id_to_edit}",
@@ -294,8 +304,8 @@ with tab2:
                                 st.rerun(scope="app")
                             except requests.exceptions.RequestException as e:
                                 st.error(f"Failed to update item: {e}")
-                        else:
-                            st.error("Selected category ID not found.")
+                        # else:
+                        #     st.error("Selected category ID not found.")
                 else:
                     st.error("Item response missing expected fields.")
             except requests.exceptions.RequestException as e:
