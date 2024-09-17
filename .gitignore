@@ -11,6 +11,9 @@ __pycache__/
 .env/
 .venv/
 
+# Ignore environment variable files
+.env
+
 # Distribution / packaging
 .Python
 build/
