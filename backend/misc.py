@@ -9,10 +9,11 @@ from langchain.chains import LLMChain
 from typing import List, Union, Dict
 import re
 import google.generativeai as genai
+from dotenv import load_dotenv
 
+load_dotenv()
 # Set up your Google API key
-os.environ["GOOGLE_API_KEY"] = "AIzaSyBx6_HFmP8XX5x49Gx5kWq_elUUItWLtv8"
-
+os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
 # Initialize the search tool
 search = DuckDuckGoSearchRun()
 
