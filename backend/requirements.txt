@@ -3,3 +3,4 @@ fastapi-cli==0.0.5
 uvicorn==0.30.6
 SQLAlchemy==2.0.25
 psycopg2-binary==2.9.9
+alembic
