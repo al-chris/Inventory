@@ -116,6 +116,7 @@ with c_tab1:
             if st.button(f"Show Items in {selected_category}"):
                 if selected_category_id:
                     items = requests.get(f"{API_URL}/categories/{selected_category_id}/items/").json()
+                    description = requests.get(f"{API_URL}/categories/{selected_category_id}").json().get('description', 'No description available')
                     if items:
                         st.subheader(f"Items in {selected_category}")
                         st.table(items)
@@ -133,6 +134,8 @@ with c_tab1:
                         )
                     else:
                         st.info(f"No items found in {selected_category}")
+                    
+                    st.markdown(f"### Report: \n {description}")
                 else:
                     st.error("Selected category ID not found.")
     except requests.exceptions.RequestException as e:
@@ -157,29 +160,49 @@ with c_tab2:
 # Edit Category
 with c_tab3:
     st.subheader("Edit Category")
-    categories = fetch_categories()
-    with st.expander("Click to Edit a category name"):
-        try:            
+    categories = fetch_categories()  # Ensure this function fetches all category fields, including 'description'
+    
+    # Create dictionaries for easy lookup
+    category_dict = {category['id']: category['name'] for category in categories}
+    description_dict = {category['id']: category.get('description', '') for category in categories}
+    
+    with st.expander("Click to Edit a Category Name and Description"):
+        try:
             if categories:
+                # Select category to edit
                 category_to_edit = st.selectbox("Select Category to Edit", options=[name for name in category_dict.values()])
                 category_id_to_edit = next((id for id, name in category_dict.items() if name == category_to_edit), None)
+                
+                # Input fields for new name and description
                 new_category_name = st.text_input("New Category Name", value=category_to_edit)
-
-                if st.button("Update Category Name"):
+                current_description = description_dict.get(category_id_to_edit, "")
+                new_category_description = st.text_area("New Category Description", value=current_description)
+    
+                if st.button("Update Category"):
                     if not new_category_name:
                         st.error("Category name cannot be empty.")
-                    if category_id_to_edit:
-                        try:
-                            response = requests.put(f"{API_URL}/categories/{category_id_to_edit}", params={"name": new_category_name})
-                            response.raise_for_status()
-                            st.success(f"Category name updated to '{new_category_name}' successfully")
-                            st.rerun(scope="app")
-                        except requests.exceptions.RequestException as e:
-                            st.error(f"Failed to update category name: {e}")
-                    else:
+                    elif category_id_to_edit is None:
                         st.error("Selected category ID not found.")
+                    else:
+                        try:
+                            # Update both name and description
+                            response = requests.put(
+                                f"{API_URL}/categories/{category_id_to_edit}/",
+                                params={
+                                    "name": new_category_name,
+                                    "description": new_category_description
+                                }
+                            )
+                            response.raise_for_status()
+                            st.success(f"Category '{new_category_name}' updated successfully")
+                            st.rerun()
+                        except requests.exceptions.RequestException as e:
+                            st.error(f"Failed to update category: {e}")
+            else:
+                st.info("No categories available to edit.")
         except requests.exceptions.RequestException as e:
             st.error(f"Error fetching categories: {e}")
+
 
 # Section to delete categories
 with c_tab4:

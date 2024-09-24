@@ -2,9 +2,13 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import sessionmaker
+from alembic.config import Config
+from alembic import command
 from database import engine, SessionLocal, Item, Category, Log, Base
 from util import dict_to_text_description
 from datetime import datetime
+
 app = FastAPI()
 
 # Dependency to get DB session
@@ -15,6 +19,15 @@ def get_db():
     finally:
         db.close()
 
+# Function to run migrations
+def run_migrations():
+    alembic_cfg = Config("alembic.ini")
+    command.upgrade(alembic_cfg, "head")
+
+# Startup event to run migrations
+@app.on_event("startup")
+async def startup_event():
+    run_migrations()
 
 # Function to create a log entry
 def create_log(action, item_id=None, category_id=None, quantity_change=None, description=None, db=None):
@@ -53,19 +66,38 @@ def create_category(name: str, db: Session = Depends(get_db)):
 
 @app.get("/categories/")
 def read_categories(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    categories = db.query(Category).offset(skip).limit(limit).all()
-    return categories
+    try:
+        categories = db.query(Category).offset(skip).limit(limit).all()
+        return categories
+    except SQLAlchemyError as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+    
+@app.get("/categories/{category_id}")
+def read_category(category_id: int, db: Session = Depends(get_db)):
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if category is None:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return category
 
 # update category name
 @app.put("/categories/{category_id}")
-def update_category(category_id: int, name: str, db: Session = Depends(get_db)):
+def update_category(category_id: int, name: str, description: str, db: Session = Depends(get_db)):
     try:
         category = db.query(Category).filter(Category.id == category_id).first()
         if category is None:
             raise HTTPException(status_code=404, detail="Category not found")
+        changes = {}
         old_name = category.name
-        category.name = name
-        changes = {"category_name": {"old": old_name, "new": name}}
+        
+        if name is not None and name != old_name:
+            changes["category_name"] = {"old": old_name, "new": name}
+            category.name = name
+        
+        if description is not None and description != category.description:
+            changes["description"] = {"old": category.description, "new": description}
+            category.description = description
+        
         db.commit()
         db.refresh(category)
 

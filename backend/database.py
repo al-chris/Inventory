@@ -1,6 +1,6 @@
 # backend/database.py
 import os
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
@@ -20,7 +20,8 @@ class Category(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)  # New creation date field
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.now())  # New creation date field
     items = relationship("Item", back_populates="category")
 
 class Item(Base):
