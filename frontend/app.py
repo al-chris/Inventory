@@ -125,6 +125,8 @@ with c_tab1:
                 category['description'] for category in categories if category['id'] == selected_category_id
             )
 
+            category_description = category_description if category_description else "No description available"
+
             if st.button(f"Show Items in {selected_category}"):
                 if selected_category_id:
                     items = requests.get(f"{API_URL}/categories/{selected_category_id}/items/").json()
