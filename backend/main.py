@@ -19,15 +19,15 @@ def get_db():
     finally:
         db.close()
 
-# Function to run migrations
-def run_migrations():
-    alembic_cfg = Config("alembic.ini")
-    command.upgrade(alembic_cfg, "head")
+# # Function to run migrations
+# def run_migrations():
+#     alembic_cfg = Config("alembic.ini")
+#     command.upgrade(alembic_cfg, "head")
 
-# Startup event to run migrations
-@app.on_event("startup")
-async def startup_event():
-    run_migrations()
+# # Startup event to run migrations
+# @app.on_event("startup")
+# async def startup_event():
+#     run_migrations()
 
 # Function to create a log entry
 def create_log(action, item_id=None, category_id=None, quantity_change=None, description=None, db=None):
