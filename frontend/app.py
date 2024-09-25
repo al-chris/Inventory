@@ -2,11 +2,15 @@ import os
 import streamlit as st
 import requests
 import pandas as pd
+from fpdf import FPDF
+from PIL import Image
+import io
 from dotenv import load_dotenv
 
 load_dotenv()
 
 API_URL = os.getenv("API_URL")
+LOGO_PATH = os.getenv("LOGO_PATH")
 
 st.set_page_config(page_title="InvenSuite", page_icon=":material/inventory:")
 
@@ -87,8 +91,53 @@ def fetch_logs_of_deleted_categories():
         st.error(f"Failed to fetch logs of deleted categories: {e}")
         return []
 #########################################################################################################
+# Function to generate PDF
+# def generate_pdf(category_name, category_description, items_df):
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
 
+    # Add logo
+    pdf.image(LOGO_PATH, x=10, y=8, w=33)
+    
+    # Title
+    pdf.set_font('Arial', 'B', 24)
+    pdf.cell(200, 20, category_name, ln=True, align='C')
+    
+    # Add space before table
+    pdf.ln(20)
 
+    # Table (Item Details)
+    pdf.set_font('Arial', 'B', 12)
+    
+    # Table headers
+    col_width = pdf.w / 4.5
+    row_height = pdf.font_size * 1.5
+    for column in items_df.columns:
+        pdf.cell(col_width, row_height, column, border=1, align='C')
+    pdf.ln(row_height)
+
+    # Table rows
+    pdf.set_font('Arial', '', 12)
+    for index, row in items_df.iterrows():
+        for item in row:
+            pdf.cell(col_width, row_height, str(item), border=1, align='C')
+        pdf.ln(row_height)
+    
+    # Add space before description
+    pdf.ln(10)
+    
+    # Category Description
+    pdf.set_font('Arial', '', 12)
+    pdf.multi_cell(0, 10, category_description)
+
+    # Save PDF to a BytesIO object
+    pdf_output = io.BytesIO()
+    pdf.output(pdf_output, 'S')
+    pdf_output.seek(0)
+
+    return pdf_output
+from pdf_test import generate_pdf
 # Display Categories
 st.header("Categories")
 
@@ -112,6 +161,17 @@ with c_tab1:
                 id for id, name in category_dict.items() if name == selected_category),
                 None
             )
+            selected_category_name = next((
+                name for id, name in category_dict.items() if name == selected_category),
+                None
+            )
+            print(selected_category_name)
+
+             # Fetch the description of the selected category
+            category_description = next(
+                category['description'] for category in categories if category['id'] == selected_category_id
+            )
+            print(category_description)
 
             if st.button(f"Show Items in {selected_category}"):
                 if selected_category_id:
@@ -122,15 +182,26 @@ with c_tab1:
                         st.table(items)
 
                         # Convert items to a DataFrame for download
-                        items_df = pd.DataFrame([items])
+                        items_df = pd.DataFrame(items)
+
+                        # Convert the 'created_at' and 'updated_at' columns to datetime
+                        items_df['created_at'] = pd.to_datetime(items_df['created_at'])
+                        items_df['updated_at'] = pd.to_datetime(items_df['updated_at'])
+
+                        # Format the datetime columns (e.g., 'YYYY-MM-DD HH:MM:SS')
+                        items_df['created_at'] = items_df['created_at'].dt.strftime('%Y-%m-%d %H:%M:%S')
+                        items_df['updated_at'] = items_df['updated_at'].dt.strftime('%Y-%m-%d %H:%M:%S')
+                        
                         csv_data = items_df.to_csv(index=False)
+                        # pdf_file = generate_pdf(selected_category_name, category_description, items_df)
+                        pdf_file = generate_pdf(selected_category_name, category_description, items_df, LOGO_PATH)
 
                         # Add download button
                         st.download_button(
-                            label="Download items as CSV :material/download:",
-                            data=csv_data,
-                            file_name=f"{selected_category}_items.csv",
-                            mime='text/csv'
+                            label="Download items as pdf :material/download:",
+                            data=pdf_file,
+                            file_name=f"{selected_category_name}_Inventory.pdf",
+                            mime="application/pdf"
                         )
                     else:
                         st.info(f"No items found in {selected_category}")
