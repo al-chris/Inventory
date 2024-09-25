@@ -2,9 +2,6 @@ import os
 import streamlit as st
 import requests
 import pandas as pd
-from fpdf import FPDF
-from PIL import Image
-import io
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -92,52 +89,9 @@ def fetch_logs_of_deleted_categories():
         return []
 #########################################################################################################
 # Function to generate PDF
-# def generate_pdf(category_name, category_description, items_df):
-    pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.add_page()
-
-    # Add logo
-    pdf.image(LOGO_PATH, x=10, y=8, w=33)
-    
-    # Title
-    pdf.set_font('Arial', 'B', 24)
-    pdf.cell(200, 20, category_name, ln=True, align='C')
-    
-    # Add space before table
-    pdf.ln(20)
-
-    # Table (Item Details)
-    pdf.set_font('Arial', 'B', 12)
-    
-    # Table headers
-    col_width = pdf.w / 4.5
-    row_height = pdf.font_size * 1.5
-    for column in items_df.columns:
-        pdf.cell(col_width, row_height, column, border=1, align='C')
-    pdf.ln(row_height)
-
-    # Table rows
-    pdf.set_font('Arial', '', 12)
-    for index, row in items_df.iterrows():
-        for item in row:
-            pdf.cell(col_width, row_height, str(item), border=1, align='C')
-        pdf.ln(row_height)
-    
-    # Add space before description
-    pdf.ln(10)
-    
-    # Category Description
-    pdf.set_font('Arial', '', 12)
-    pdf.multi_cell(0, 10, category_description)
-
-    # Save PDF to a BytesIO object
-    pdf_output = io.BytesIO()
-    pdf.output(pdf_output, 'S')
-    pdf_output.seek(0)
-
-    return pdf_output
 from pdf_test import generate_pdf
+
+
 # Display Categories
 st.header("Categories")
 
@@ -191,7 +145,7 @@ with c_tab1:
                         # Format the datetime columns (e.g., 'YYYY-MM-DD HH:MM:SS')
                         items_df['created_at'] = items_df['created_at'].dt.strftime('%Y-%m-%d %H:%M:%S')
                         items_df['updated_at'] = items_df['updated_at'].dt.strftime('%Y-%m-%d %H:%M:%S')
-                        
+
                         csv_data = items_df.to_csv(index=False)
                         # pdf_file = generate_pdf(selected_category_name, category_description, items_df)
                         pdf_file = generate_pdf(selected_category_name, category_description, items_df, LOGO_PATH)
