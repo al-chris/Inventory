@@ -204,11 +204,12 @@ def generate_pdf(category_name, category_description, items_df, logo_filename):
     table.setStyle(table_style)
 
     # Add Logo
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    logo_path = os.path.join(current_dir, logo_filename)
+    # current_dir = os.path.dirname(os.path.abspath(__file__))
+    # logo_path = os.path.join(current_dir, logo_filename)
 
-    if not os.path.exists(logo_path):
-        raise FileNotFoundError(f"Logo file '{logo_filename}' not found in the current directory.")
+    # if not os.path.exists(logo_path):
+    #     raise FileNotFoundError(f"Logo file '{logo_filename}' not found in the current directory.")
+    logo_path = logo_filename
 
     logo = Image(logo_path)
     logo.drawHeight = 50  # Adjust as needed

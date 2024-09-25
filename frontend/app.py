@@ -119,13 +119,11 @@ with c_tab1:
                 name for id, name in category_dict.items() if name == selected_category),
                 None
             )
-            print(selected_category_name)
 
              # Fetch the description of the selected category
             category_description = next(
                 category['description'] for category in categories if category['id'] == selected_category_id
             )
-            print(category_description)
 
             if st.button(f"Show Items in {selected_category}"):
                 if selected_category_id:
