@@ -13,6 +13,10 @@ st.set_page_config(page_title="InvenSuite", page_icon=":material/inventory:")
 
 st.title("Inventory Management System")
 
+# Initialize session state for 'last_category' if not already set
+if 'last_category' not in st.session_state:
+    st.session_state['last_category'] = None  # Initialize with None
+
 # User Authentication (Simple Password Protection)
 password = st.sidebar.text_input("Enter Password", type="password")
 if password != os.getenv("PASSWORD"):
@@ -177,8 +181,8 @@ with c_tab2:
             try:
                 response = requests.post(f"{API_URL}/categories/", params={"name": new_category_name})
                 response.raise_for_status()
-                st.rerun(scope="app")
                 st.success("Category created successfully")
+                st.rerun()
             except requests.exceptions.RequestException as e:
                 st.error(f"Failed to create category: {e}")
 
@@ -251,7 +255,7 @@ with c_tab4:
                     # Enable the delete button only when the confirmation text is correct
                     if st.button("Delete Category"):
                         delete_category(category_id)
-                        st.rerun(scope="app")
+                        st.rerun()
                 else:
                     st.warning(f'Type "delete {selected_category}" to enable the delete button.')
         else:
@@ -282,9 +286,23 @@ with tab1:
             item_description = st.text_area("Item Description")
             item_quantity = st.number_input("Quantity", min_value=1, step=1)
 
+            # Fetch categories within the form to ensure the latest data
+            categories = fetch_categories()
+            category_dict = {category['id']: category['name'] for category in categories}
+
             # Check if there are categories available
             if categories:
-                category_name = st.selectbox("Category", [category['name'] for category in categories])
+                category_names = [category['name'] for category in categories]
+                
+                # If 'last_category' is not set or not in the current categories, set it to the first category
+                if st.session_state['last_category'] not in category_names:
+                    st.session_state['last_category'] = category_names[0]
+                
+                # Determine the default index based on 'last_category'
+                default_index = category_names.index(st.session_state['last_category']) if st.session_state['last_category'] in category_names else 0
+                
+                # Selectbox with the default category pre-selected
+                category_name = st.selectbox("Category", category_names, index=default_index)
                 category_id = next((id for id, name in category_dict.items() if name == category_name), None)
             else:
                 category_id = None
@@ -308,7 +326,11 @@ with tab1:
                         )
                         response.raise_for_status()
                         st.success("Item created successfully")
-                        st.rerun(scope="app")
+                        
+                        # Update 'last_category' in session state to the selected category
+                        st.session_state['last_category'] = category_name
+                        
+                        st.rerun()
                     except requests.exceptions.RequestException as e:
                         st.error(f"Failed to create item: {e}")
 
@@ -349,7 +371,7 @@ with tab2:
                                 )
                                 response.raise_for_status()
                                 st.success("Item updated successfully")
-                                st.rerun(scope="app")
+                                st.rerun()
                             except requests.exceptions.RequestException as e:
                                 st.error(f"Failed to update item: {e}")
                         # else:
@@ -417,14 +439,12 @@ with tab5:
             
             if st.button("Delete Item"):
                 delete_item(item_id)
-                st.rerun(scope="app")
+                st.rerun()
     else:
         st.info("No items found.")
 
 st.divider()
 #########################################################################################################
-
-
 
 
 # View Logs Section
