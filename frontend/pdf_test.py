@@ -213,7 +213,7 @@ def generate_pdf(category_name, category_description, items_df, logo_filename):
 
     logo = Image(logo_path)
     logo.drawHeight = 50  # Adjust as needed
-    logo.drawWidth = 50   # Adjust as needed
+    logo.drawWidth = 100   # Adjust as needed
     logo.hAlign = 'LEFT'
     elements.append(logo)
 
