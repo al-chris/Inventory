@@ -367,7 +367,7 @@ with tab2:
                 if all(key in item for key in ['name', 'description', 'quantity', 'category_id']):
                     item_name_edit = st.text_input("Edit Item Name", value=item['name'])
                     item_description_edit = st.text_area("Edit Item Description", value=item['description'])
-                    item_quantity_edit = st.number_input("Edit Quantity", value=item['quantity'], min_value=1, step=1)
+                    item_quantity_edit = st.number_input("Edit Quantity", value=int(item['quantity']), min_value=1, step=1)
                     item_category_name_edit = st.selectbox(
                         "Edit Category",
                         [category['name'] for category in categories],
