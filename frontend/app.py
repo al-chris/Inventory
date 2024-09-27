@@ -1,5 +1,7 @@
 import os
 import streamlit as st
+from streamlit_quill import st_quill
+import markdownify
 import requests
 import pandas as pd
 from dotenv import load_dotenv
@@ -140,7 +142,21 @@ with c_tab1:
                         st.table(items)
 
                         # Convert items to a DataFrame for download
-                        items_df = pd.DataFrame(items)
+                        if isinstance(items, dict):
+                            print("no info")
+                            items_df = pd.DataFrame(
+                                # placeholder data to avoid errors
+                                [{
+                                    'quantity': None, 
+                                    'id': None, 
+                                    'name': 'None', 
+                                    'updated_at': '2024-09-26T10:24:43.265995', 
+                                    'description': 'None', 
+                                    'category_id': None, 
+                                    'created_at': '2024-09-26T10:24:43.265995'}]
+                            )
+                        else:
+                            items_df = pd.DataFrame(items)
 
                         # Convert the 'created_at' and 'updated_at' columns to datetime
                         items_df['created_at'] = pd.to_datetime(items_df['created_at'])
@@ -164,7 +180,7 @@ with c_tab1:
                     else:
                         st.info(f"No items found in {selected_category}")
                     
-                    st.markdown(f"### Report: \n {description}")
+                    st.markdown(f"### Report: \n {description}", unsafe_allow_html=True)
                 else:
                     st.error("Selected category ID not found.")
     except requests.exceptions.RequestException as e:
@@ -205,7 +221,8 @@ with c_tab3:
                 # Input fields for new name and description
                 new_category_name = st.text_input("New Category Name", value=category_to_edit)
                 current_description = description_dict.get(category_id_to_edit, "")
-                new_category_description = st.text_area("New Category Description", value=current_description)
+                # new_category_description = st.text_area("New Category Description", value=current_description)
+                new_category_description = st_quill(value=current_description, html=True, preserve_whitespace=True)
     
                 if st.button("Update Category"):
                     if not new_category_name:
@@ -219,9 +236,14 @@ with c_tab3:
                                 f"{API_URL}/categories/{category_id_to_edit}/",
                                 params={
                                     "name": new_category_name,
+                                    # "description": markdownify.markdownify(
+                                    #     new_category_description, 
+                                    #     heading_style="ATX"
+                                    # ) if new_category_description else None
                                     "description": new_category_description
                                 }
                             )
+                            print(new_category_description)
                             response.raise_for_status()
                             st.success(f"Category '{new_category_name}' updated successfully")
                             st.rerun()

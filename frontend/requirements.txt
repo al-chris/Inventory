@@ -3,3 +3,6 @@ requests
 python-dotenv
 reportlab
 pandas
+markdown
+markdownify
+streamlit-quill
