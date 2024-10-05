@@ -1,0 +1,462 @@
+#:kivy 2.1.0
+#:import MDRaisedButton kivymd.uix.button.MDRaisedButton
+#:import MDTextField kivymd.uix.textfield.MDTextField
+#:import MDSpinner kivymd.uix.spinner.MDSpinner
+#:import MDToolbar kivymd.uix.toolbar.MDToolbar
+#:import MDScreen kivymd.uix.screen.MDScreen
+#:import MDBoxLayout kivymd.uix.boxlayout.MDBoxLayout
+#:import MDList kivymd.uix.list.MDList
+#:import ScrollView kivy.uix.scrollview.ScrollView
+
+<ConfirmationPopup@MDDialog>:
+    title: root.title
+    text: root.message
+    size_hint: 0.8, None
+    height: dp(200)
+    buttons:
+        MDRaisedButton:
+            text: 'Yes'
+            on_release:
+                root.on_confirm()
+        MDRaisedButton:
+            text: 'No'
+            on_release: root.dismiss()
+
+<LoginScreen>:
+    name: 'login'
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: dp(50)
+        spacing: dp(20)
+
+        MDToolbar:
+            title: "Inventory Management"
+            md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+
+        MDTextField:
+            id: password_input
+            hint_text: "Enter Password"
+            password: True
+            size_hint_x: None
+            width: dp(300)
+            pos_hint: {"center_x": 0.5}
+            on_text_validate: root.do_login()
+
+        MDRaisedButton:
+            text: "Login"
+            pos_hint: {"center_x": 0.5}
+            on_release: root.do_login()
+
+        MDLabel:
+            id: message
+            text: ""
+            halign: "center"
+            theme_text_color: "Error"
+
+<MainScreen>:
+    name: 'main'
+    MDBoxLayout:
+        orientation: 'vertical'
+
+        MDToolbar:
+            title: "Dashboard"
+            md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+
+        MDBottomNavigation:
+            panel_color: app.theme_cls.primary_color
+
+            MDBottomNavigationItem:
+                name: 'categories_tab'
+                text: 'Categories'
+                icon: 'folder'
+
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    padding: dp(20)
+                    spacing: dp(20)
+
+                    MDRaisedButton:
+                        text: "Manage Categories"
+                        size_hint_y: None
+                        height: dp(50)
+                        on_release:
+                            app.root.current = 'categories'
+
+            MDBottomNavigationItem:
+                name: 'items_tab'
+                text: 'Items'
+                icon: 'package'
+
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    padding: dp(20)
+                    spacing: dp(20)
+
+                    MDRaisedButton:
+                        text: "Manage Items"
+                        size_hint_y: None
+                        height: dp(50)
+                        on_release:
+                            app.root.current = 'items'
+
+        MDRaisedButton:
+            text: "Logout"
+            pos_hint: {"center_x": 0.5}
+            size_hint_y: None
+            height: dp(50)
+            on_release:
+                app.root.current = 'login'
+
+<CategoriesScreen>:
+    name: 'categories'
+    MDBoxLayout:
+        orientation: 'vertical'
+
+        MDToolbar:
+            title: "Categories"
+            left_action_items: [["arrow-left", lambda x: app.root.current = 'main']]
+            md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+
+        MDBoxLayout:
+            orientation: 'horizontal'
+            padding: dp(10)
+            spacing: dp(10)
+            size_hint_y: None
+            height: dp(50)
+
+            MDRaisedButton:
+                text: "Create"
+                on_release:
+                    app.root.current = 'create_category'
+
+            MDRaisedButton:
+                text: "Edit"
+                on_release:
+                    app.root.current = 'edit_category'
+
+            MDRaisedButton:
+                text: "Delete"
+                on_release:
+                    app.root.current = 'delete_category'
+
+        ScrollView:
+            MDList:
+                id: categories_list
+
+<ItemsScreen>:
+    name: 'items'
+    MDBoxLayout:
+        orientation: 'vertical'
+
+        MDToolbar:
+            title: "Items"
+            left_action_items: [["arrow-left", lambda x: app.root.current = 'main']]
+            md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+
+        MDBoxLayout:
+            orientation: 'horizontal'
+            padding: dp(10)
+            spacing: dp(10)
+            size_hint_y: None
+            height: dp(50)
+
+            MDRaisedButton:
+                text: "Create"
+                on_release:
+                    app.root.current = 'create_item'
+
+            MDRaisedButton:
+                text: "Edit"
+                on_release:
+                    app.root.current = 'edit_item'
+
+            MDRaisedButton:
+                text: "Delete"
+                on_release:
+                    app.root.current = 'delete_item'
+
+        ScrollView:
+            MDList:
+                id: items_list
+
+<CreateCategoryScreen>:
+    name: 'create_category'
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(20)
+
+        MDToolbar:
+            title: "Create Category"
+            left_action_items: [["arrow-left", lambda x: app.root.current = 'categories']]
+            md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+
+        MDTextField:
+            id: category_name
+            hint_text: "Category Name"
+            required: True
+            mode: "rectangle"
+
+        MDTextField:
+            id: category_description
+            hint_text: "Category Description"
+            multiline: True
+            height: dp(100)
+            size_hint_y: None
+            mode: "rectangle"
+
+        MDRaisedButton:
+            text: "Create"
+            pos_hint: {"center_x": 0.5}
+            on_release: root.create_category()
+
+        MDRaisedButton:
+            text: "Back"
+            pos_hint: {"center_x": 0.5}
+            on_release:
+                app.root.current = 'categories'
+
+<EditCategoryScreen>:
+    name: 'edit_category'
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(20)
+
+        MDToolbar:
+            title: "Edit Category"
+            left_action_items: [["arrow-left", lambda x: app.root.current = 'categories']]
+            md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+
+        MDSpinner:
+            active: False
+            id: category_spinner
+
+        MDTextField:
+            id: new_category_name
+            hint_text: "New Category Name"
+            required: True
+            mode: "rectangle"
+
+        MDTextField:
+            id: new_category_description
+            hint_text: "New Category Description"
+            multiline: True
+            height: dp(100)
+            size_hint_y: None
+            mode: "rectangle"
+
+        MDRaisedButton:
+            text: "Update"
+            pos_hint: {"center_x": 0.5}
+            on_release: root.update_category()
+
+        MDRaisedButton:
+            text: "Back"
+            pos_hint: {"center_x": 0.5}
+            on_release:
+                app.root.current = 'categories'
+
+<DeleteCategoryScreen>:
+    name: 'delete_category'
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(20)
+
+        MDToolbar:
+            title: "Delete Category"
+            left_action_items: [["arrow-left", lambda x: app.root.current = 'categories']]
+            md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+
+        MDSpinner:
+            active: False
+            id: delete_category_spinner
+
+        MDTextField:
+            id: confirmation_input
+            hint_text: 'Type "delete <category_name>" to confirm'
+            required: True
+            mode: "rectangle"
+
+        MDRaisedButton:
+            text: "Delete"
+            pos_hint: {"center_x": 0.5}
+            on_release: root.delete_category()
+
+        MDRaisedButton:
+            text: "Back"
+            pos_hint: {"center_x": 0.5}
+            on_release:
+                app.root.current = 'categories'
+
+<CreateItemScreen>:
+    name: 'create_item'
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(20)
+
+        MDToolbar:
+            title: "Create Item"
+            left_action_items: [["arrow-left", lambda x: app.root.current = 'items']]
+            md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+
+        MDTextField:
+            id: item_name
+            hint_text: "Item Name"
+            required: True
+            mode: "rectangle"
+
+        MDTextField:
+            id: item_description
+            hint_text: "Item Description"
+            multiline: True
+            height: dp(100)
+            size_hint_y: None
+            mode: "rectangle"
+
+        MDTextField:
+            id: item_quantity
+            hint_text: "Quantity"
+            required: True
+            mode: "rectangle"
+            input_filter: 'int'
+
+        MDSpinner:
+            id: item_category_spinner
+            text: "Select Category"
+            values: root.category_names
+            size_hint_x: None
+            width: dp(200)
+            pos_hint: {"center_x": 0.5}
+            on_text: root.category_spinner.text = self.text
+
+        MDRaisedButton:
+            text: "Create"
+            pos_hint: {"center_x": 0.5}
+            on_release: root.create_item()
+
+        MDRaisedButton:
+            text: "Back"
+            pos_hint: {"center_x": 0.5}
+            on_release:
+                app.root.current = 'items'
+
+<EditItemScreen>:
+    name: 'edit_item'
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(20)
+
+        MDToolbar:
+            title: "Edit Item"
+            left_action_items: [["arrow-left", lambda x: app.root.current = 'items']]
+            md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+
+        MDTextField:
+            id: edit_item_id
+            hint_text: "Enter Item ID to Edit"
+            required: True
+            mode: "rectangle"
+            input_filter: 'int'
+
+        MDRaisedButton:
+            text: "Load Item"
+            pos_hint: {"center_x": 0.5}
+            on_release: root.load_item()
+
+        MDTextField:
+            id: edit_item_name
+            hint_text: "Item Name"
+            required: True
+            mode: "rectangle"
+
+        MDTextField:
+            id: edit_item_description
+            hint_text: "Item Description"
+            multiline: True
+            height: dp(100)
+            size_hint_y: None
+            mode: "rectangle"
+
+        MDTextField:
+            id: edit_item_quantity
+            hint_text: "Quantity"
+            required: True
+            mode: "rectangle"
+            input_filter: 'int'
+
+        MDSpinner:
+            id: edit_item_category_spinner
+            text: "Select Category"
+            values: root.category_names
+            size_hint_x: None
+            width: dp(200)
+            pos_hint: {"center_x": 0.5}
+            on_text: root.category_spinner.text = self.text
+
+        MDRaisedButton:
+            text: "Update"
+            pos_hint: {"center_x": 0.5}
+            on_release: root.update_item()
+
+        MDRaisedButton:
+            text: "Back"
+            pos_hint: {"center_x": 0.5}
+            on_release:
+                app.root.current = 'items'
+
+<DeleteItemScreen>:
+    name: 'delete_item'
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(20)
+
+        MDToolbar:
+            title: "Delete Item"
+            left_action_items: [["arrow-left", lambda x: app.root.current = 'items']]
+            md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+
+        MDTextField:
+            id: delete_item_id
+            hint_text: "Enter Item ID to Delete"
+            required: True
+            mode: "rectangle"
+            input_filter: 'int'
+
+        MDRaisedButton:
+            text: "Delete"
+            pos_hint: {"center_x": 0.5}
+            on_release: root.delete_item()
+
+        MDRaisedButton:
+            text: "Back"
+            pos_hint: {"center_x": 0.5}
+            on_release:
+                app.root.current = 'items'
+
+ScreenManager:
+    transition: NoTransition()
+    LoginScreen:
+    MainScreen:
+    CategoriesScreen:
+    ItemsScreen:
+    CreateCategoryScreen:
+    EditCategoryScreen:
+    DeleteCategoryScreen:
+    CreateItemScreen:
+    EditItemScreen:
+    DeleteItemScreen:
